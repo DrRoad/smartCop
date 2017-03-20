@@ -55,6 +55,27 @@ def main():
       print("EOS input stream, exit")
       return
 
+
+    #cv2.imshow('input image',img)
+    #gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    #gray = cv2.bilateralFilter(gray, 11, 17, 17)
+    #cv2.imshow('gray image',gray)
+    #edged = cv2.Canny(gray, 30, 200)
+    #cv2.imshow('Canny edges',edged)
+
+    #(_,contours, _) = cv2.findContours(edged.copy(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+    #cnts = sorted(contours, key = cv2.contourArea, reverse = True)[:40]
+    #cnts = sorted(contours, key = cv2.contourArea, reverse = True)[:40]
+    #cv2.drawContours(img,cnts,-1,(0,255,0),2) #-1 fills it
+    #cv2.imshow('final',img)
+
+    #while(True):
+    #    if cv2.waitKey(1) & 0xFF == ord('q'):
+    #       break
+
+    #return
+
     if options.warp == True:
        print("warp was set to true");
 
@@ -105,6 +126,59 @@ def main():
            cv2.imshow('reprojected', im_dst)
 
         show_frame(im_src,mirror=False)
+
+        # TODO: Pre-process the Input Image before conversion to gray?
+
+        if options.warp == True:
+            gray = cv2.cvtColor(im_dst, cv2.COLOR_BGR2GRAY)
+        else:
+            gray = cv2.cvtColor(im_src, cv2.COLOR_BGR2GRAY)
+
+        # TODO: Post-process the Input Image to sharpen it?
+
+        # TODO: Get filter parameters from user
+        #gray = cv2.bilateralFilter(gray, 11, 17, 17)
+        cv2.imshow('gray image',gray)
+
+        # TODO: Get Canny parameters from user
+        edged = cv2.Canny(gray, 30, 200)
+        cv2.imshow('Canny edges',edged)
+
+        (_,contours, _) = cv2.findContours(edged.copy(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        cnts = sorted(contours, key = cv2.contourArea, reverse = True)
+        #cnts = sorted(contours, key = cv2.contourArea, reverse = True)[:40]
+
+        new_contour = cnts[:1]
+        # TODO: Get a Threshold Parameter from User
+        for c in cnts:
+            # approximate the contour
+            #peri = cv2.arcLength(c, True)
+            # approx = cv2.approxPolyDP(c, 0.02 * peri, True)
+            #print(peri>100)
+            area = cv2.contourArea(c)
+            if area > 10:
+                peri = cv2.arcLength(c, True)
+                approx = cv2.approxPolyDP(c, 0.02 * peri, True)
+                if (len(approx) == 3 or 4 or 5):
+                    new_contour.append(c)
+
+        cnts = new_contour
+
+        print("OVER TO NEXT Frame")
+
+        # TODO: Get a parameter if only rectangle to be displayed
+        # if our approximated contour has four points, then
+        # we can assume that we have found our screen
+        # if len(approx) == 4:
+        # screenCnt = approx
+        # break
+
+        if options.warp == True:
+            cv2.drawContours(im_dst,cnts,-1,(0,255,0),2) #-1 fills it
+            cv2.imshow('final',im_dst)
+        else:
+            cv2.drawContours(im_src,cnts,-1,(0,255,0),2) #-1 fills it
+            cv2.imshow('final',im_src)
 
         #print(str(datetime.now()))
 
